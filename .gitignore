@@ -1,3 +1,31 @@
+
+# ---------------- Extra Exclusions ---------------- #
+
+# ignore pycharm project folder
+.idea/
+
+# ignore vscode project folder
+.vscode/
+
+# ignore spyder project folder
+.spyderproject/
+.spyproject/
+
+# ignore local development folders
+dev_venv/
+dev_workspace.code-workspace
+
+# ignore files generated from backport runns
+nohup.out
+
+# ignore folder with Logs
+files/logs
+
+# ignore folder with Logs
+files/backups
+
+# --------------- ------------------ --------------- #
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -109,10 +137,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
 
 # Rope project settings
 .ropeproject
