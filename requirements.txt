@@ -19,4 +19,6 @@ graphviz>=0.14.1
 pydot>=1.4.1
 ccxt>=1.42
 tensorflow==2.4.1
-matplotlib
+matplotlib>=3.3.4
+seaborn>=0.11.1
+keras

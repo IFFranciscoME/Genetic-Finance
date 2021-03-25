@@ -12,8 +12,8 @@
 .spyproject/
 
 # ignore local development folders
-dev_venv/
-dev_workspace.code-workspace
+geneticmethods_env/
+geneticmethods.code-workspace
 
 # ignore files generated from backport runns
 nohup.out
