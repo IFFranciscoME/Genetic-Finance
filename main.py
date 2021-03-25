@@ -94,8 +94,8 @@ lin_features = fn.data_scaler(p_data=lin_features, p_trans='standard')
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 15000, 'tournament': 3000, 'hof': 30, 'generations': 6, 'n_features': 30,
-                   'init_depth': (2, 6), 'init_method': 'half and half', 'parsimony': 0.001,
+                   'population': 12000, 'tournament': 3000, 'hof': 30, 'generations': 5, 'n_features': 30,
+                   'init_depth': (4, 10), 'init_method': 'half and half', 'parsimony': 0.001,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.90, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.5,
@@ -261,7 +261,7 @@ y_train = data['train_y']
 val_y = data['val_y']
 
 learning_rate = 0.001
-epochs = 200
+epochs = 500
 batch = 16
 neurons = x_train.shape[1]
 
