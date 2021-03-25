@@ -235,14 +235,6 @@ exp_corr = exp_3.corr()
 # sns.heatmap(exp_corr[[y_hat]].sort_values(by=y_hat, ascending=False),
             # vmin=-1, vmax=1,  annot=True, cmap='Blues')
 
-
-# --------------------------------------------------------------------------------------------- Notebook -- #
-## Define and train models (logistic + MLP)
-
-
-fn.ann_mlp()
-
-
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## Models
 

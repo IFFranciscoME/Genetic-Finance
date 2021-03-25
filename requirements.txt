@@ -21,4 +21,4 @@ ccxt>=1.42
 tensorflow==2.4.1
 matplotlib>=3.3.4
 seaborn>=0.11.1
-keras
+keras>=2.4.3
