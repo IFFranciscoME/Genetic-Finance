@@ -11,8 +11,8 @@
 .spyderproject/
 .spyproject/
 
-# ignore local development folders
-geneticmethods_env/
+# ignore local development folders (venv and workspace)
+geneticmethods_venv/
 geneticmethods.code-workspace
 
 # ignore files generated from backport runns
