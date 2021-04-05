@@ -197,7 +197,7 @@ def massive_ohlcv(p_class, p_ini_date, p_end_date, p_asset, p_freq, p_verbose):
 # -- RUN ONLY IF YOU WANT TO FETCH A LARGE HISTORICAL DATA
 # df_prices = massive_ohlcv(p_class, p_ini_date, p_end_date, p_asset, p_freq, p_verbose)
 
-# ----------------------------------------------------------------------------------- masive OHLCV data -- #
+# ------------------------------------------------------------------------------- Read Masive OHLCV data -- #
 
 # -- RUN IF YOU WANT TO READ SAVED CSV FILE
-df_prices = pd.read_csv('files/ETH_USDT_8h.csv')
+df_prices = pd.read_csv('files/prices/ETH_USDT_8h.csv')

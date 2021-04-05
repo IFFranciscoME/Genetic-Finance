@@ -14,6 +14,7 @@
 ## Import other scripts
 
 import numpy as np
+from tensorflow.python.util.tf_stack import StackTraceFilter
 import functions as fn
 import data as dt
 import visualizations as vz
@@ -53,13 +54,14 @@ exchanges = ccxt.exchanges
 df_data = dt.df_prices
 
 # First 5 elements
-df_data.head(5)
+# df_data.head(5)
 
 # Last 5 elements
 df_data.tail(5)
 
 # General description
-df_data.describe()
+data_profile = fn.data_profile(p_data=df_data.copy(), p_type='ohlc', p_mult=1)
+print(data_profile)
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## Visualize data with OHLC Candlestick plot made with plotly
@@ -76,13 +78,21 @@ plot_1 = vz.g_ohlc(p_ohlc=df_data)
 # -- Linear Features Engineering
 lin_features = fn.linear_features(p_data=df_data, p_memory=7, p_target='co')
 
+# data profile
+lin_features_profile = fn.data_profile(p_data=lin_features.copy(), p_type='ts', p_mult=1)
 # description 
-lin_features.describe()
+print(lin_features_profile)
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## Scale linear features (robust)
 
-lin_features = fn.data_scaler(p_data=lin_features, p_trans='standard')
+# -- Linear Features Scaling
+lin_features = fn.data_scaler(p_data=lin_features, p_trans='robust')
+
+# data profile
+lin_features_profile = fn.data_profile(p_data=lin_features.copy(), p_type='ts', p_mult=1)
+# description 
+print(lin_features_profile)
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## Use gplearn library
@@ -94,8 +104,8 @@ lin_features = fn.data_scaler(p_data=lin_features, p_trans='standard')
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 12000, 'tournament': 3000, 'hof': 30, 'generations': 5, 'n_features': 30,
-                   'init_depth': (4, 10), 'init_method': 'half and half', 'parsimony': 0.001,
+                   'population': 12000, 'tournament': 3000, 'hof': 30, 'generations': 7, 'n_features': 30,
+                   'init_depth': (2, 6), 'init_method': 'half and half', 'parsimony': 0.001,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.90, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.5,
@@ -159,17 +169,52 @@ exp_1 = exp_1.reindex(columns=sorted(list(exp_1.columns)))
 # Data for Experiment 3
 # exp_1.head()
 
+# correlation matrix
+exp_corr = exp_1.corr('pearson')
+exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
+
+# plot 1
+plt.figure(figsize=(12, 12))
+sns.heatmap(exp_corr_t, cmap='Blues', cbar=True, square=True, center=0.0,
+            annot=False, cbar_kws={'shrink':.95}, fmt='.2f')
+
+# formatting
+plt.rcParams["xtick.labelcolor"] = 'darkgrey'
+plt.rcParams["ytick.labelcolor"] = 'darkgrey'
+plt.rcParams["ytick.labelsize"] = 8
+plt.rcParams["xtick.labelsize"] = 8
+
+# show plot
+# plt.show()
+
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## EXPERIMENT 2: Original Data and Symbolic Features
 
 exp_2 = pd.concat([lin_features.copy(), sym_features.copy()], axis=1)
-
 # Data for Experiment 3
-# exp_2.head()
+exp_2.head()
+
+# correlation matrix
+exp_corr = exp_2.corr('pearson')
+exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
+# plot 2
+plt.figure(figsize=(18, 18))
+sns.heatmap(exp_corr_t, cmap='Blues', cbar=True, square=True, center=0.0,
+            annot=False, cbar_kws={'shrink':.95}, fmt='.2f')
+
+# formatting
+plt.rcParams["xtick.labelcolor"] = 'darkgrey'
+plt.rcParams["ytick.labelcolor"] = 'darkgrey'
+plt.rcParams["ytick.labelsize"] = 8
+plt.rcParams["xtick.labelsize"] = 8
+
+# show plot
+# plt.show()
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## EXPERIMENT 3: Just 'important' variables from Original Data & Symbolic Features
 
+# get all the data (linear features and symbolic features)
 exp_3 = exp_2.copy()
 
 # Correlation with target variable most be >= condition_1 
@@ -180,17 +225,6 @@ condition_2 = 0.5
 
 # Correlation matrix
 exp_3_corr = exp_3.corr('pearson')
-
-# This value is the 'demean' version of pearson
-exp_3_corr['co']
-
-# -- retransform for fitness pearson
-y_pred = exp_2['sym_1']
-y_pred_demean = y_pred - np.average(y_pred)
-y = exp_2['co']
-y_demean = y - np.average(y)
-rev_pearson = np.sum(y_pred_demean*y_demean)/(np.sqrt((np.sum(y_pred_demean**2) * np.sum(y_demean**2))))
-rev_pearson
 
 no_ok_1 = list(exp_3.columns[abs(exp_3_corr[y_hat]) < condition_1])
 exp_3_1 = exp_3.drop(no_ok_1, inplace=False, axis=1)
@@ -214,26 +248,85 @@ exp_3_2_corr = exp_3_1_corr
 exp_3 = exp_3[['co'] + list(exp_3_2_corr.columns)]
 
 # Data for Experiment 3
-exp_3.head()
+# exp_3.head()
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
-## Models
+### Correlation heatmaps
 
-# matriz de correlacion entre features
-f_corr = exp_3.corr()
+# layout grid
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18,18))
+# calculation for plot 1
+exp_corr = exp_3.corr('pearson')
+exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
+# plot 1
+sns.heatmap(exp_corr_t, cmap='Blues', cbar=False, square=True, ax=ax1, 
+            annot=True, annot_kws={'fontsize':8}, fmt='.2f')
+ax1.set_title("|Pearson Correlation| > 0.10")
 
-# matriz de correlacion de features con target variable
-ft_corr = pd.concat([exp_3['co'],
-                     exp_3.iloc[:, 1:]], ignore_index=True, axis=1).corr()
+# calculation for plot 2
+exp_corr = exp_3.corr('spearman')
+exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
+# plot 2
+sns.heatmap(exp_corr_t, cmap='Blues', cbar=False, square=True, ax=ax2, 
+            annot=True, annot_kws={'fontsize':8}, fmt='.2f')
+ax2.set_title("|spearman Correlation| < 0.50")
 
-exp_corr = exp_3.corr()
+# formatting
+plt.rcParams["xtick.labelcolor"] = 'darkgrey'
+plt.rcParams["ytick.labelcolor"] = 'darkgrey'
+plt.rcParams["ytick.labelsize"] = 8
+plt.rcParams["xtick.labelsize"] = 8
 
-# plt.figure(figsize=(12, 12))
-# sns.heatmap(exp_corr, cmap='Blues', annot=True, cbar=False, center=0.0, fmt='.2g')
+# show plot
+# plt.show()
 
-# plt.figure(figsize=(6, 12))
-# sns.heatmap(exp_corr[[y_hat]].sort_values(by=y_hat, ascending=False),
-            # vmin=-1, vmax=1,  annot=True, cmap='Blues')
+# --------------------------------------------------------------------------------------------- Notebook -- #
+## EXPERIMENT 4: top 10 'important' variables (original + symbolic) both using pearson and spearman
+
+# get all the data (linear features and symbolic features)
+exp_4 = exp_2.copy()
+# Top N important variables (pearson and spearman)
+n_important = 10
+# use pearson coefficient
+exp_4_p = exp_4.corr('pearson')
+# use spearman coefficient
+exp_4_s = exp_4.corr('spearman')
+# create dataframes with top N features according to correlation criteria
+exp_4_p = exp_4.copy()[abs(exp_4_p['co']).sort_values(ascending=False)[1:n_important].index]
+exp_4_s = exp_4.copy()[abs(exp_4_s['co']).sort_values(ascending=False)[1:n_important].index]
+exp_4 = pd.concat([exp_4 ['co'], exp_4_s, exp_4_p], axis=1)
+# print top 5 rows
+# exp_4.head()
+
+# --------------------------------------------------------------------------------------------- Notebook -- #
+### Correlation heatmaps
+
+# layout grid
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14,14))
+# calculation for plot 1
+exp_corr = exp_4.corr('pearson')
+exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
+# plot 1
+sns.heatmap(exp_corr_t, cmap='Blues', cbar=False, square=True, ax=ax1, 
+            annot=True, annot_kws={'fontsize':8}, fmt='.2f')
+ax1.set_title("Pearson Correlation")
+
+# calculation for plot 2
+exp_corr = exp_4.corr('spearman')
+exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
+# plot 2
+sns.heatmap(exp_corr_t, cmap='Blues', cbar=False, square=True, ax=ax2, 
+            annot=True, annot_kws={'fontsize':8}, fmt='.2f')
+ax2.set_title("spearman Correlation")
+
+# formatting
+plt.rcParams["xtick.labelcolor"] = 'darkgrey'
+plt.rcParams["ytick.labelcolor"] = 'darkgrey'
+plt.rcParams["ytick.labelsize"] = 8
+plt.rcParams["xtick.labelsize"] = 8
+
+# show plot
+plt.show()
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## Models

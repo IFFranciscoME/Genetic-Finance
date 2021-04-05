@@ -9,6 +9,7 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 
+from matplotlib.pyplot import axis
 import pandas as pd
 import numpy as np
 import data as dt
@@ -78,21 +79,25 @@ def data_profile(p_data, p_type, p_mult):
 
     # copy of input data
     f_data = p_data.copy()
+    
+    # check if a timestamp column is present to drop it.
+    if 'timestamp' in [col.lower() for col in f_data.columns.to_list()]:
+        f_data.drop('timestamp', inplace=True, axis=1)
+        f_data.reset_index(drop=True, inplace=True)
 
     # interquantile range
     def f_iqr(param_data):
-        q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
-        q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
-        return  q1 - q3
+        q1 = np.percentile(param_data, 25, interpolation = 'midpoint')
+        q3 = np.percentile(param_data, 75, interpolation = 'midpoint')
+        return  q3 - q1
     
     # outliers function (returns how many were detected, not which ones or indexes)
     def f_out(param_data):
-        q1 = np.percentile(param_data, 75, interpolation = 'midpoint')
-        q3 = np.percentile(param_data, 25, interpolation = 'midpoint')
-        lower_out = len(np.where(param_data < q1 - 1.5*f_iqr(param_data))[0])
-        upper_out = len(np.where(param_data > q3 + 1.5*f_iqr(param_data))[0])
+        q1 = np.percentile(param_data, 25, interpolation = 'midpoint')
+        q3 = np.percentile(param_data, 75, interpolation = 'midpoint')
+        lower_out = len(param_data[param_data < (q1 - 2*f_iqr(param_data))].index)
+        upper_out = len(param_data[param_data > (q3 + 2*f_iqr(param_data))].index)
         return [lower_out, upper_out]
-
 
     # -- OHLCV PROFILING -- #
     if p_type == 'ohlc':
@@ -124,9 +129,11 @@ def data_profile(p_data, p_type, p_mult):
     
     # add outliers count
     outliers = [f_out(param_data=f_data[col]) for col in list(f_data.columns)]
+    
     negative_series = pd.Series([i[0] for i in outliers], index = data_des.columns)
-    positive_series = pd.Series([i[1] for i in outliers], index = data_des.columns)
     data_des = data_des.append(negative_series, ignore_index=True)
+    
+    positive_series = pd.Series([i[1] for i in outliers], index = data_des.columns)
     data_des = data_des.append(positive_series, ignore_index=True)
     
     # index names
