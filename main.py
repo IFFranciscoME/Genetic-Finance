@@ -80,6 +80,7 @@ lin_features = fn.linear_features(p_data=df_data, p_memory=7, p_target='co')
 
 # data profile
 lin_features_profile = fn.data_profile(p_data=lin_features.copy(), p_type='ts', p_mult=1)
+
 # description 
 print(lin_features_profile)
 
@@ -87,7 +88,7 @@ print(lin_features_profile)
 ## Scale linear features (robust)
 
 # -- Linear Features Scaling
-lin_features = fn.data_scaler(p_data=lin_features, p_trans='robust')
+lin_features = fn.data_scaler(p_data=lin_features, p_trans='standard')
 
 # data profile
 lin_features_profile = fn.data_profile(p_data=lin_features.copy(), p_type='ts', p_mult=1)
@@ -104,8 +105,8 @@ print(lin_features_profile)
 
 # paremeters for symbolic features generation process
 symbolic_params = {'functions': ['sub', 'add', 'inv', 'mul', 'div', 'abs', 'log', 'sqrt'],
-                   'population': 12000, 'tournament': 3000, 'hof': 30, 'generations': 7, 'n_features': 30,
-                   'init_depth': (2, 6), 'init_method': 'half and half', 'parsimony': 0.001,
+                   'population': 12000, 'tournament': 3000, 'hof': 30, 'generations': 5, 'n_features': 30,
+                   'init_depth': (4, 10), 'init_method': 'half and half', 'parsimony': 0.001,
                    'constants': None,
                    'metric': 'pearson', 'metric_goal': 0.90, 
                    'prob_cross': 0.4, 'prob_mutation_subtree': 0.5,
@@ -171,21 +172,11 @@ exp_1 = exp_1.reindex(columns=sorted(list(exp_1.columns)))
 
 # correlation matrix
 exp_corr = exp_1.corr('pearson')
-exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
 
-# plot 1
-plt.figure(figsize=(12, 12))
-sns.heatmap(exp_corr_t, cmap='Blues', cbar=True, square=True, center=0.0,
-            annot=False, cbar_kws={'shrink':.95}, fmt='.2f')
-
-# formatting
-plt.rcParams["xtick.labelcolor"] = 'darkgrey'
-plt.rcParams["ytick.labelcolor"] = 'darkgrey'
-plt.rcParams["ytick.labelsize"] = 8
-plt.rcParams["xtick.labelsize"] = 8
+plot_2 = vz.g_heat_corr(p_data=exp_corr, p_double=False)
 
 # show plot
-# plt.show()
+# plot_2.show()
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## EXPERIMENT 2: Original Data and Symbolic Features
@@ -197,6 +188,9 @@ exp_2.head()
 # correlation matrix
 exp_corr = exp_2.corr('pearson')
 exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
+
+corr_1 = vz.g_heat_corr(p_data=exp_corr, p_double=False, p_annot=False)
+
 # plot 2
 plt.figure(figsize=(18, 18))
 sns.heatmap(exp_corr_t, cmap='Blues', cbar=True, square=True, center=0.0,
@@ -326,7 +320,7 @@ plt.rcParams["ytick.labelsize"] = 8
 plt.rcParams["xtick.labelsize"] = 8
 
 # show plot
-plt.show()
+# plt.show()
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## Models
@@ -336,14 +330,14 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import SGD
 from sklearn.metrics import r2_score
 
-experiments = {1: exp_1, 2: exp_2, 3: exp_3}
-exp = 3
+experiments = {1: exp_1, 2: exp_2, 3: exp_3, 4: exp_4}
+exp = 4
 
 data = fn.data_split(p_data=experiments[exp], p_target='co', p_split=0.8)
 x_train = data['train_x']
-val_x = data['val_x']
+x_val = data['val_x']
 y_train = data['train_y']
-val_y = data['val_y']
+y_val = data['val_y']
 
 learning_rate = 0.001
 epochs = 500
@@ -353,6 +347,7 @@ neurons = x_train.shape[1]
 # Neural network architecture
 model = Sequential()
 model.add(Dense(neurons, activation='sigmoid', input_dim=x_train.shape[1]))
+model.add(Dense(neurons, activation='sigmoid'))
 model.add(Dense(1, activation='linear'))
 opt = SGD(lr=learning_rate)
 
@@ -360,10 +355,10 @@ model.compile(loss = 'mean_squared_error', optimizer=opt, metrics=['mse'])
 
 # fit the model
 model_history = model.fit(x_train, y_train, epochs=epochs, batch_size=batch,
-                        validation_data=(val_x, val_y), verbose=2)
+                        validation_data=(x_val, y_val), verbose=2)
 
 model_score_t = model.evaluate(x_train, y_train)
-model_score_v = model.evaluate(val_x, val_y)
+model_score_v = model.evaluate(x_val, y_val)
 
 print('Train loss:', model_score_t[0])
 print('Train mse:', model_score_t[1])
@@ -380,16 +375,31 @@ ax.tick_params(labelsize=20)
 
 y_hat = model.predict(x_train)
 R2_score = r2_score(y_train, y_hat)
+y_hat_val = model.predict(val_x)
+R2_score_val = r2_score(val_y, y_hat_val)
 
 x_min, x_max = min(y_train),max(y_train)
 x_line = np.linspace(x_min, x_max)
 
 fig = plt.figure(figsize=(10,6))
-plt.scatter(y_train,y_hat,label='Estimation')
+plt.scatter(y_train,y_hat,label='Train Estimation')
 plt.plot(x_line, x_line, 'k--', label='Perfect estimation')
 plt.xlabel('Real output', fontsize=20)
 plt.ylabel('Estimation output', fontsize=20)
 plt.title('R^2=%0.4f'%R2_score, fontsize=20)
+plt.legend()
+plt.grid()
+plt.show()
+
+x_min, x_max = min(y_train),max(y_train)
+x_line = np.linspace(x_min, x_max)
+
+fig = plt.figure(figsize=(10,6))
+plt.scatter(val_y, y_hat_val,label='Test Estimation')
+plt.plot(x_line, x_line, 'k--', label='Perfect estimation')
+plt.xlabel('Real output', fontsize=20)
+plt.ylabel('Estimation output', fontsize=20)
+plt.title('R^2=%0.4f'%R2_score_val, fontsize=20)
 plt.legend()
 plt.grid()
 plt.show()

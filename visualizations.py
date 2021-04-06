@@ -12,10 +12,10 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-import seaborn as sns
 
+from functools import reduce
+from itertools import product
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -131,14 +131,103 @@ def g_ohlc(p_ohlc, p_theme=None, p_vlines=None):
 
     return fig_g_ohlc
 
-def heat_corr(Vs):
-
-    plt.figure(figsize=(15,15))
-
-    sns.heatmap(Vs.corr(), cmap='RdBu_r', annot=True, center=0.0)
-
-    plt.show()
-
-Vtitle = 'nan0'
+# -- -------------------------------------------------------------------- PLOT: HeatMap Correlation Plot -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
 
 
+def g_heat_corr(p_data, p_double, p_annot):
+    """
+    Generates a heatmap correlation matrix with seaborn library
+
+    Parameters
+    ----------
+
+    p_data: pd.DataFrame
+        With correlation matrix
+
+        p_data = pd.DataFrame(np.random.randn(10, 10))
+
+    p_double: bool
+        True: To generate 2 plots (horizontal axis)
+        False: To generate 1 centered plot
+
+        p_double = False
+
+     p_annot: bool
+        True: To include annotations in the plot
+        False: Not to include annotations in the plot
+
+        p_annot = True
+
+    Returns
+    -------
+        plt = matplotlib plot object
+
+    References
+    ----------
+        http://seaborn.pydata.org/generated/seaborn.heatmap.html
+
+    """
+
+    # copy of original data
+    g_data = p_data.copy()
+    
+    # mask = np.triu(np.ones_like(g_data, dtype=bool))
+    rLT = g_data.where(np.tril(np.ones(g_data.shape)).astype(np.bool_))
+    # mask = np.triu(np.ones_like(g_data, dtype=bool))
+    nrLT = g_data.where(np.triu(np.ones(g_data.shape)).astype(np.bool_))
+   
+    g_heat = go.Figure()
+    title = 'Correlation Matrix'
+
+    g_heat = g_heat.add_trace(go.Heatmap(showscale=False,
+        z = nrLT*1, 
+        x = nrLT.columns.values,
+        y = nrLT.columns.values,
+        xgap = 0,   # Sets the horizontal gap (in pixels) between bricks
+        ygap = 0,
+        zmin = -1,  # Sets the lower bound of the color domain
+        zmax = +1,
+        colorscale = ['#FFFFFF', '#FFFFFF']))
+
+    g_heat = g_heat.add_trace(go.Heatmap(showscale=False,
+        z = rLT,
+        x = rLT.columns.values,
+        y = rLT.columns.values,
+        zmin = -1,  # Sets the lower bound of the color domain
+        zmax = +1,
+        xgap = +1,   # Sets the horizontal gap (in pixels) between bricks
+        ygap = +1,
+        colorscale = 'Blues'))  
+
+    g_heat = g_heat.update_layout(
+        title_text=title,
+        title_x = 0.5, 
+        title_y = 0.90, 
+        width = 900, 
+        height = 900,
+        xaxis_showgrid = False,
+        yaxis_showgrid = False,
+        yaxis_autorange = 'reversed')
+
+    z = np.array(rLT.values).tolist()
+
+    def get_att(Mx):
+        Mx = z
+        att=[]
+        Mx = Mx
+        a, b = len(Mx), len(Mx[0])
+        flat_z = reduce(lambda x, y: x + y, Mx)  # Mx.flat if you deal with numpy
+        flat_z = [1 if str(i) == 'nan' else i for i in flat_z]
+        colors_z = ['#FAFAFA' if i > 0 else '#6E6E6E' for i in flat_z]
+        coords = product(range(a), range(b))
+        for pos, elem, color in zip(coords, flat_z, colors_z):
+            att.append({'font': {'color': color, 'size':9},
+                        'text': str(np.round(elem, 2)), 'showarrow': False,
+                        'x': pos[1],
+                        'y': pos[0]})
+        return att
+            
+    g_heat.update_layout(annotations=get_att(z))
+
+    return g_heat.show()
