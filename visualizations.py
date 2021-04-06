@@ -135,7 +135,7 @@ def g_ohlc(p_ohlc, p_theme=None, p_vlines=None):
 # -- --------------------------------------------------------------------------------------------------- -- #
 
 
-def g_heat_corr(p_data, p_double, p_annot):
+def g_heat_corr(p_data, p_double):
     """
     Generates a heatmap correlation matrix with seaborn library
 

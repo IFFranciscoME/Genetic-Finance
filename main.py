@@ -67,10 +67,10 @@ print(data_profile)
 ## Visualize data with OHLC Candlestick plot made with plotly
 
 # Plot Financial Timeseries Based Candlesticks (OHLC)
-plot_1 = vz.g_ohlc(p_ohlc=df_data)
+plot_0 = vz.g_ohlc(p_ohlc=df_data)
 
 # interactive plot with plotly (check visualizations.py)
-# plot_1.show()
+# plot_0.show()
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## Construct linear features (Autoregressive)
@@ -171,12 +171,15 @@ exp_1 = exp_1.reindex(columns=sorted(list(exp_1.columns)))
 # exp_1.head()
 
 # correlation matrix
-exp_corr = exp_1.corr('pearson')
+exp_corr_p = exp_1.corr('pearson')
+exp_corr_s = exp_1.corr('pearson')
 
-plot_2 = vz.g_heat_corr(p_data=exp_corr, p_double=False)
+# Plots generation 
+plot_1_p = vz.g_heat_corr(p_data=exp_corr_p, p_double=False)
+plot_1_s = vz.g_heat_corr(p_data=exp_corr_s, p_double=False)
 
 # show plot
-# plot_2.show()
+# plot_1_p.show()
 
 # --------------------------------------------------------------------------------------------- Notebook -- #
 ## EXPERIMENT 2: Original Data and Symbolic Features
@@ -189,7 +192,7 @@ exp_2.head()
 exp_corr = exp_2.corr('pearson')
 exp_corr_t = exp_corr.where(np.tril(np.ones(exp_corr.shape)).astype(np.bool_))
 
-corr_1 = vz.g_heat_corr(p_data=exp_corr, p_double=False, p_annot=False)
+corr_1 = vz.g_heat_corr(p_data=exp_corr, p_double=False)
 
 # plot 2
 plt.figure(figsize=(18, 18))
@@ -375,8 +378,8 @@ ax.tick_params(labelsize=20)
 
 y_hat = model.predict(x_train)
 R2_score = r2_score(y_train, y_hat)
-y_hat_val = model.predict(val_x)
-R2_score_val = r2_score(val_y, y_hat_val)
+y_hat_val = model.predict(x_val)
+R2_score_val = r2_score(y_val, y_hat_val)
 
 x_min, x_max = min(y_train),max(y_train)
 x_line = np.linspace(x_min, x_max)
@@ -395,7 +398,7 @@ x_min, x_max = min(y_train),max(y_train)
 x_line = np.linspace(x_min, x_max)
 
 fig = plt.figure(figsize=(10,6))
-plt.scatter(val_y, y_hat_val,label='Test Estimation')
+plt.scatter(y_val, y_hat_val,label='Test Estimation')
 plt.plot(x_line, x_line, 'k--', label='Perfect estimation')
 plt.xlabel('Real output', fontsize=20)
 plt.ylabel('Estimation output', fontsize=20)
