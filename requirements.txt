@@ -1,24 +1,40 @@
 
 # -- --------------------------------------------------------------------------------------------------- -- #
-# -- project: Applications of Genetic Methods for Feature Engineering and Hyperparameter Optimization    -- #
-# -- -------- for Neural Networks.                                                                       -- #
-# -- script: requirements.txt : text file with the required libraries for the project                    -- #
-# -- author: IFFranciscoME - if.francisco.me@gmail.com                                                   -- #
+# -- Genetic Programming for Feature Engineering with Financial Time Series Data                         -- #
+# -- --------------------------------------------------------------------------------------------------- -- #
+# -- Description: These notes are part of the series: Evolutionary Computation Methods for FML           -- #
+# -- File: requirements.txt : text file with the required libraries for the project                      -- #
+# -- Author: IFFranciscoME - if.francisco.me@gmail.com                                                   -- #
 # -- license: GPL-3.0 License                                                                            -- #
-# -- repository: https://github.com/IFFranciscoME/GeneticMethods                                         -- #
+# -- Repository: https://github.com/IFFranciscoME/STSC-Temporal-Patterns                                 -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 
+# Run the following in bash console:
+# $ pip instal -r requirements.txt
+
+# -- Generic
 pandas>=1.1.2
-jupyter>=1.0.0
-statsmodels>=0.12.0
-plotly>=4.10.0
-scikit-learn>=0.23.2
-gplearn>=0.4.1
-sympy>=1.1.1
-graphviz>=0.14.1
-pydot>=1.4.1
+numpy>=1.20
+
+# -- Data sources
 ccxt>=1.42
-tensorflow==2.4.1
+
+# -- Data Visualization
+jupyter>=1.0.0
+plotly>=4.10.0
+pydot>=1.4.1
+graphviz>=0.14.1
 matplotlib>=3.3.4
 seaborn>=0.11.1
+
+# -- Stats tools
+statsmodels>=0.12.0
+scikit-learn>=0.23.2
+
+# -- Evolutionary methods
+gplearn>=0.4.1
+sympy>=1.1.1
+
+# -- Machine Learning Models
+tensorflow==2.4.1
 keras>=2.4.3
